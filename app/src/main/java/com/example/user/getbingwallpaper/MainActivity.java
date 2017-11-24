@@ -50,23 +50,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private class BingWallPaper extends AsyncTask<Void,Void,Bitmap>{
+    public class BingWallPaper extends AsyncTask<Void,Void,Bitmap>{
 
         private Uri uri;
-        private static final String IMAGE_JSON_URL="https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-us";
+
 
         public BingWallPaper(){
         }
 
         @Override
         protected Bitmap doInBackground(Void... voids) {
-            uri=getImageUri();
+            uri=GetBingWallPaperHelper.getImageUri();
             if(uri==null)
                 return null;
-            InputStream in=downloadImage(uri);
+            InputStream in=GetBingWallPaperHelper.downloadImage(uri);
             if(null==in)
                 return null;
-            return decodeImage(in);
+            return GetBingWallPaperHelper.decodeImage(in);
         }
 
         @Override
@@ -76,63 +76,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        private String getURLString(){
-            Uri jsonUri=Uri.parse(IMAGE_JSON_URL);
-            String json=null;
-            try {
-                URLConnection conn = new URL(jsonUri.toString()).openConnection();
-                conn.connect();
-                InputStream in=conn.getInputStream();
-                InputStreamReader ir=new InputStreamReader(in,"utf-8");
-                BufferedReader br=new BufferedReader(ir);
-                String line;
-                json="";
-                while ((line=br.readLine())!=null){
-                    json+=line;
-                }
-            }
-            catch (IOException e){
-                e.printStackTrace();
-                Log.w(TAG,"获取图片信息失败");
-            }
-            return json;
-        }
 
-        private Uri getImageUri(){
-            String urlString=getURLString();
-            Uri uri=null;
-            if(urlString==null)
-                return null;
-
-            try {
-                JSONObject json = new JSONObject(urlString);
-                uri= Uri.parse("https://www.bing.com"+((JSONObject)((JSONArray)json.get("images")).get(0)).get("url").toString());
-            }catch (JSONException e){
-                Log.w(TAG,"获取json信息失败");
-            }
-            return uri;
-        }
-
-        private InputStream downloadImage(Uri uri){
-            InputStream in=null;
-            try {
-                URLConnection conn = new URL(uri.toString()).openConnection();
-                conn.connect();
-                in = conn.getInputStream();
-            }
-            catch (IOException e){
-                e.printStackTrace();
-                Log.w(TAG,"获取图片失败");
-            }
-            return in;
-        }
-
-        private Bitmap decodeImage(InputStream in) {
-            BufferedInputStream buffer=null;
-            Bitmap bit=null;
-            buffer=new BufferedInputStream(in);
-            bit= BitmapFactory.decodeStream(buffer);
-            return bit;
-        }
     }
 }
