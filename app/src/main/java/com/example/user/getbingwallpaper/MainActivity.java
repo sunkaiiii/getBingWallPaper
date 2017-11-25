@@ -36,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
         list = (ListView) findViewById(R.id.list);
         adpter = new imageListAdpter(this, getWindowManager().getDefaultDisplay().getWidth(), getWindowManager().getDefaultDisplay().getWidth());
         list.setAdapter(adpter);
+        adpter.getBingData();
     }
 
     @Override

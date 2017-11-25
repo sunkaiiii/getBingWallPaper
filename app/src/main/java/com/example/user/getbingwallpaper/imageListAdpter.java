@@ -28,6 +28,7 @@ public class imageListAdpter extends BaseAdapter {
     private LayoutInflater inflater;
     int width;
     int height;
+    int count,when;
 
     public imageListAdpter(Context context, int width, int height) {
         init(context, width, height, 5, 0);
@@ -48,7 +49,9 @@ public class imageListAdpter extends BaseAdapter {
         inflater = (LayoutInflater) mContext.getSystemService(mContext.LAYOUT_INFLATER_SERVICE);
         this.width = width;
         this.height = (int) (((double) width / 1920.0) * 1080); //根据传入进来的手机分辨率，调整图片宽高
-        new HandleImage(count, when).execute();
+        this.count=count;
+        this.when=when;
+
     }
 
     @Override
@@ -83,6 +86,10 @@ public class imageListAdpter extends BaseAdapter {
     public void refreshList(List<Bitmap> lists) {
         mList = lists;
         notifyDataSetChanged();
+    }
+
+    public void getBingData(){
+        new HandleImage(count, when).execute();
     }
 
     protected ViewHolder createViewHolder(int position, LayoutInflater inflater, ViewGroup parent) {
@@ -140,7 +147,12 @@ public class imageListAdpter extends BaseAdapter {
                 InputStream in = GetBingWallPaperHelper.downloadImage(uriLists.get(i).url);
                 mList.add(GetBingWallPaperHelper.decodeImage(in));
                 mStringList.add(uriLists.get(i).copyRight);
-                publishProgress();
+                publishProgress(); //网速较快的时候List数据不一致会发生闪退，暂时没想好合适的解决方法，用Sleep先行代替
+                try {
+                    Thread.sleep(100);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
             }
             return null;
         }
