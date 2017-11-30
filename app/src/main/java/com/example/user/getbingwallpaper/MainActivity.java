@@ -10,6 +10,7 @@ import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -31,11 +32,14 @@ public class MainActivity extends AppCompatActivity {
 
     private ListView list;
     private imageListAdpter adpter;
+    ProgressBar progressBar;
 
     private void init() {
         list = (ListView) findViewById(R.id.list);
+        progressBar=(ProgressBar)findViewById(R.id.loading);
         adpter = new imageListAdpter(this, getWindowManager().getDefaultDisplay().getWidth(), getWindowManager().getDefaultDisplay().getWidth());
         list.setAdapter(adpter);
+        list.setEmptyView(progressBar);
         adpter.getBingData();
     }
 
