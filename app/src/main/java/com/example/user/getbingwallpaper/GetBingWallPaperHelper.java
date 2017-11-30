@@ -94,7 +94,10 @@ public class GetBingWallPaperHelper {
 
     public static List<ImageInfo> getMultiImageUri(int count, int when) {
         if (count > 7) {
-            count = 7; //必应接口最高返回7张图片
+            count = 7; //必应接口最高返回近7张图片
+        }
+        if(when>7){
+            when=0;
         }
         String urlString = getMuiltiUrl(count, when);
         List<ImageInfo> imageInfos=new ArrayList<>();

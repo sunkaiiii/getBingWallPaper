@@ -7,6 +7,7 @@ import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.AbsListView;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -41,6 +42,24 @@ public class MainActivity extends AppCompatActivity {
         list.setAdapter(adpter);
         list.setEmptyView(progressBar);
         adpter.getBingData();
+
+//        list.setOnScrollListener(new AbsListView.OnScrollListener() {
+//            @Override
+//            public void onScrollStateChanged(AbsListView absListView, int i) {
+//                switch (i){
+//                    case AbsListView.OnScrollListener.SCROLL_STATE_IDLE:
+//                        System.out.println(list.getLastVisiblePosition());
+//                        if(list.getLastVisiblePosition()==list.getAdapter().getCount()-1){
+//                            ((imageListAdpter)list.getAdapter()).getBingData(list.getAdapter().getCount());
+//                        }
+//                }
+//            }
+//
+//            @Override
+//            public void onScroll(AbsListView absListView, int i, int i1, int i2) {
+//
+//            }
+//        });
     }
 
     @Override
@@ -49,4 +68,5 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         init();
     }
+
 }

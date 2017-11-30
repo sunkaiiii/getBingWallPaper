@@ -31,7 +31,7 @@ public class imageListAdpter extends BaseAdapter {
     int count,when;
 
     public imageListAdpter(Context context, int width, int height) {
-        init(context, width, height, 5, 0);
+        init(context, width, height, 7, 0);
     }
 
     public imageListAdpter(Context context, int width, int height, int count) {
@@ -69,6 +69,7 @@ public class imageListAdpter extends BaseAdapter {
         return i;
     }
 
+
     @Override
     public View getView(int i, View convertView, ViewGroup viewGroup) {
         final ViewHolder viewHolder;
@@ -91,6 +92,7 @@ public class imageListAdpter extends BaseAdapter {
     public void getBingData(){
         new HandleImage(count, when).execute();
     }
+    public void getBingData(int when){new HandleImage(count,when).execute();}
 
     protected ViewHolder createViewHolder(int position, LayoutInflater inflater, ViewGroup parent) {
         final View convertView = inflater.inflate(R.layout.image_item, parent, false);
