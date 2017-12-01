@@ -2,14 +2,20 @@ package com.example.user.getbingwallpaper;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Message;
+import android.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import java.io.InputStream;
@@ -22,13 +28,14 @@ import java.util.zip.Inflater;
  */
 
 public class imageListAdpter extends BaseAdapter {
-    private Context mContext;
-    private List<Bitmap> mList;
-    private List<String> mStringList;
-    private LayoutInflater inflater;
+    Context context;
     int width;
     int height;
     int count,when;
+    List<ImageInfo> uri=null;
+    ListView listView;
+    //图片缓存
+    LruCache<Uri,Bitmap> lruCache;
 
     public imageListAdpter(Context context, int width, int height) {
         init(context, width, height, 7, 0);
@@ -43,25 +50,39 @@ public class imageListAdpter extends BaseAdapter {
     }
 
     private void init(Context context, int width, int height, int count, int when) {
-        mContext = context;
-        mList = new ArrayList<>(count);
-        mStringList=new ArrayList<>();
-        inflater = (LayoutInflater) mContext.getSystemService(mContext.LAYOUT_INFLATER_SERVICE);
+        this.context=context;
         this.width = width;
         this.height = (int) (((double) width / 1920.0) * 1080); //根据传入进来的手机分辨率，调整图片宽高
         this.count=count;
         this.when=when;
+        int maxMemory=(int)Runtime.getRuntime().maxMemory();
+        int cacheSize=maxMemory/4;
+        lruCache=new LruCache<Uri,Bitmap>(cacheSize){
+            @Override
+            protected int sizeOf(Uri key, Bitmap value) {
+                return value.getByteCount();
+            }
+        };
+
+        //启动线程，获取uri
+        new Thread(()->{
+            uri=GetBingWallPaperHelper.getMultiImageUri(count,when);
+            new Handler((context.getMainLooper()),message -> {
+                notifyDataSetChanged();
+                return true;
+            }).sendEmptyMessage(0);
+        }).start();
 
     }
 
     @Override
     public int getCount() {
-        return mList.size();
+        return uri==null?0:uri.size();
     }
 
     @Override
     public Object getItem(int i) {
-        return mList.get(i);
+        return uri.get(i);
     }
 
     @Override
@@ -72,96 +93,63 @@ public class imageListAdpter extends BaseAdapter {
 
     @Override
     public View getView(int i, View convertView, ViewGroup viewGroup) {
-        final ViewHolder viewHolder;
-
-        if (convertView != null) {
-            viewHolder = (ViewHolder) convertView.getTag();
-        } else {
-            viewHolder = createViewHolder(i, inflater, viewGroup);
+        if(listView==null){
+            listView=(ListView)viewGroup;
         }
-        viewHolder.img.setImageBitmap(mList.get(i));
-        viewHolder.textView.setText(mStringList.get(i));
-        return viewHolder.convertView;
+        View view=LayoutInflater.from(context).inflate(R.layout.image_item,null);
+        TextView textView=(TextView)view.findViewById(R.id.image_item_image_info);
+        ImageView imageView=(ImageView)view.findViewById(R.id.image_item_image);
+        ViewGroup.LayoutParams params=(ViewGroup.LayoutParams)imageView.getLayoutParams();
+        params.width=width;
+        params.height=height;
+        imageView.setLayoutParams(params);
+        textView.setText(((ImageInfo)getItem(i)).copyRight);
+        Uri uri=((ImageInfo)getItem(i)).url;
+        imageView.setTag(uri);
+        Bitmap bitmap=getBitmapCache(uri);
+        if(bitmap!=null){
+            imageView.setImageBitmap(bitmap);
+        }
+        else{
+            BitmapWorkerTask bitmapWorkerTask=new BitmapWorkerTask(uri,listView);
+            bitmapWorkerTask.execute();
+        }
+        return view;
     }
 
-    public void refreshList(List<Bitmap> lists) {
-        mList = lists;
-        notifyDataSetChanged();
+    private Bitmap getBitmapCache(Uri uri){
+        return lruCache.get(uri);
     }
 
-    public void getBingData(){
-        new HandleImage(count, when).execute();
-    }
-    public void getBingData(int when){new HandleImage(count,when).execute();}
-
-    protected ViewHolder createViewHolder(int position, LayoutInflater inflater, ViewGroup parent) {
-        final View convertView = inflater.inflate(R.layout.image_item, parent, false);
-        return new ViewHolder(convertView);
+    private void addMemoryCache(Uri uri,Bitmap bitmap){
+        lruCache.put(uri,bitmap);
     }
 
-
-    private class ViewHolder {
-        View convertView;
-        ImageView img;
-        TextView textView;
-
-        public ViewHolder(View convertView) {
-            this.convertView = convertView;
-            img = (ImageView) convertView.findViewById(R.id.image_item_image);
-            textView = (TextView) convertView.findViewById(R.id.image_item_image_info);
-            ViewGroup.LayoutParams params = (ViewGroup.LayoutParams) img.getLayoutParams();
-
-            //根据手机分辨率，调整imageview的大小
-//            System.out.println(width+" "+height);
-            params.width = width;
-            params.height = height;
-            img.setLayoutParams(params);
-            convertView.setTag(this);
-        }
-    }
-
-    private class HandleImage extends AsyncTask<Void, Void, Bitmap> {
-        private List<ImageInfo> uriLists;
-        int count, when;
-
-        HandleImage() {
-            System.out.println("获取图片列表");
-            doing(5, 0);
-        }
-
-        HandleImage(int count) {
-            doing(count, 0);
-        }
-
-        HandleImage(int count, int when) {
-            doing(count, when);
-        }
-
-        private void doing(int count, int when) {
-            this.count = count;
-            this.when = when;
+    class BitmapWorkerTask extends AsyncTask<Void,Void,Bitmap>{
+        ListView listView;
+        Uri uri;
+        public BitmapWorkerTask(Uri uri,ListView listView){
+            this.uri=uri;
+            this.listView=listView;
         }
 
         @Override
         protected Bitmap doInBackground(Void... voids) {
-            uriLists = GetBingWallPaperHelper.getMultiImageUri(count, when);
-            for (int i = 0; i < uriLists.size(); i++) {
-                InputStream in = GetBingWallPaperHelper.downloadImage(uriLists.get(i).url);
-                mList.add(GetBingWallPaperHelper.decodeImage(in));
-                mStringList.add(uriLists.get(i).copyRight);
-                publishProgress(); //网速较快的时候List数据不一致会发生闪退，暂时没想好合适的解决方法，用Sleep先行代替
-                try {
-                    Thread.sleep(100);
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
+            Bitmap bitmap=BitmapFactory.decodeStream(GetBingWallPaperHelper.downloadImage(uri));
+            if(bitmap!=null) {
+                addMemoryCache(uri, bitmap);
+                return bitmap;
             }
             return null;
         }
 
         @Override
-        protected void onProgressUpdate(Void... values) {
-            notifyDataSetChanged();
+        protected void onPostExecute(Bitmap bitmap) {
+            ImageView imageView=(ImageView)listView.findViewWithTag(uri);
+            if(imageView!=null&&bitmap!=null){
+                imageView.setImageBitmap(bitmap);
+            }
         }
     }
+
 }

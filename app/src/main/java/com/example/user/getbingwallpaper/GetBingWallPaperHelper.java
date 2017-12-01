@@ -68,20 +68,21 @@ public class GetBingWallPaperHelper {
         }
         return json;
     }
-
-    public static Uri getImageUri() {
-        String urlString = getURLString();
-        Uri uri = null;
+    public static Uri getImageUri(int when){
+        String urlString=getMuiltiUrl(1,when);
+        Uri uri=null;
         if (urlString == null)
             return null;
-
-        try {
+        try{
             JSONObject json = new JSONObject(urlString);
             uri = Uri.parse("https://www.bing.com" + ((JSONObject) ((JSONArray) json.get("images")).get(0)).get("url").toString());
-        } catch (JSONException e) {
+        }catch (JSONException e) {
             Log.w(TAG, "获取json信息失败");
         }
         return uri;
+    }
+    public static Uri getTodayImageUri() {
+        return getImageUri(0);
     }
 
     public static List<ImageInfo> getMultiImageUri() {

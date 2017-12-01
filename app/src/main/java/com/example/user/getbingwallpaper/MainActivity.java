@@ -41,7 +41,6 @@ public class MainActivity extends AppCompatActivity {
         adpter = new imageListAdpter(this, getWindowManager().getDefaultDisplay().getWidth(), getWindowManager().getDefaultDisplay().getWidth());
         list.setAdapter(adpter);
         list.setEmptyView(progressBar);
-        adpter.getBingData();
 
 //        list.setOnScrollListener(new AbsListView.OnScrollListener() {
 //            @Override
