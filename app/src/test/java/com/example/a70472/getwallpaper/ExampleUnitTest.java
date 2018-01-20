@@ -1,4 +1,4 @@
-package com.example.user.getbingwallpaper;
+package com.example.a70472.getwallpaper;
 
 import org.junit.Test;
 

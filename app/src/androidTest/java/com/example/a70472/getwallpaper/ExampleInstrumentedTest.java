@@ -1,4 +1,4 @@
-package com.example.user.getbingwallpaper;
+package com.example.a70472.getwallpaper;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("com.example.user.getbingwallpaper", appContext.getPackageName());
+        assertEquals("com.example.a70472.getwallpaper", appContext.getPackageName());
     }
 }
